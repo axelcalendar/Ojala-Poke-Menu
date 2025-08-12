@@ -18,7 +18,7 @@
   <script type="text/babel">
     const { useMemo, useState } = React;
 
-    // Data
+    // Presets
     const PRESETS = [
       { name: "El Clásico", price: 13 },
       { name: "Bristol", price: 15 },
@@ -28,9 +28,9 @@
       { name: "Ico", price: 14 },
     ];
 
+    // Custom builder config
     const LIMITS = { base: 1, protein: 1, toppings: 4, sauce: 1, crunchy: 1 };
     const EXTRA_PRICES = { base: 2, protein: 3, toppings: 1.5, sauce: 1, crunchy: 1.5 };
-
     const BASES = ["Arroz sushi", "Quinoa", "Ensalada"];
     const PROTEINS = [
       "Salmón (crudo)","Salmón tataki","Salmón teriyaki",
@@ -79,15 +79,10 @@
     function App() {
       const [qty, setQty] = useState(1);
       const [selection, setSelection] = useState({ base: [], protein: [], toppings: [], sauce: [], crunchy: [] });
-      const basePrice = 13;
+      const [presetOrders, setPresetOrders] = useState([]); // store {name, price}
+      const [customerName, setCustomerName] = useState("");
 
-      const counts = useMemo(() => ({
-        base: selection.base.length,
-        protein: selection.protein.length,
-        toppings: selection.toppings.length,
-        sauce: selection.sauce.length,
-        crunchy: selection.crunchy.length,
-      }), [selection]);
+      const basePrice = 13;
 
       const extras = useMemo(() => {
         const out = {};
@@ -100,7 +95,10 @@
 
       const extrasTotal = Object.values(extras).reduce((a, b) => a + b, 0);
       const bowlSubtotal = basePrice + extrasTotal;
-      const orderTotal = (bowlSubtotal * qty).toFixed(2);
+
+      const presetsTotal = presetOrders.reduce((sum, p) => sum + p.price, 0);
+      const customTotal = bowlSubtotal * qty;
+      const orderTotal = (customTotal + presetsTotal).toFixed(2);
 
       const toggle = (group, item) => {
         setSelection((prev) => {
@@ -113,23 +111,50 @@
       const reset = () => {
         setSelection({ base: [], protein: [], toppings: [], sauce: [], crunchy: [] });
         setQty(1);
+        setPresetOrders([]);
+        setCustomerName("");
+      };
+
+      const addPreset = (preset) => {
+        setPresetOrders([...presetOrders, preset]);
       };
 
       const shareText = () => {
-        const lines = [
-          `Pedido Poke Bowl x${qty}`,
-          `Base: ${selection.base.join(", ") || "-"}`,
-          `Proteína: ${selection.protein.join(", ") || "-"}`,
-          `Toppings: ${selection.toppings.join(", ") || "-"}`,
-          `Salsa: ${selection.sauce.join(", ") || "-"}`,
-          `Crujiente: ${selection.crunchy.join(", ") || "-"}`,
-          `Precio por bowl: ${bowlSubtotal.toFixed(2)} €`,
-          `Total: ${orderTotal} €`,
-        ];
-        return encodeURIComponent(lines.join("\\n"));
+        const lines = [];
+        lines.push(`Nombre del cliente: ${customerName.trim() || "-"}`);
+        lines.push(`Recogida en local`);
+        lines.push("");
+
+        if (presetOrders.length > 0) {
+          lines.push("**Preset Bowls:**");
+          const counts = presetOrders.reduce((acc, p) => {
+            acc[p.name] = (acc[p.name] || 0) + 1;
+            return acc;
+          }, {});
+          Object.entries(counts).forEach(([name, count]) => {
+            lines.push(`${name} ×${count}`);
+          });
+          lines.push(`Subtotal presets: ${presetsTotal.toFixed(2)} €`);
+          lines.push("");
+        }
+
+        lines.push("**Custom Bowls:**");
+        lines.push(`Cantidad: ${qty}`);
+        lines.push(`Base: ${selection.base.join(", ") || "-"}`);
+        lines.push(`Proteína: ${selection.protein.join(", ") || "-"}`);
+        lines.push(`Toppings: ${selection.toppings.join(", ") || "-"}`);
+        lines.push(`Salsa: ${selection.sauce.join(", ") || "-"}`);
+        lines.push(`Crujiente: ${selection.crunchy.join(", ") || "-"}`);
+        lines.push(`Precio por custom bowl: ${bowlSubtotal.toFixed(2)} €`);
+        lines.push(`Subtotal custom: ${customTotal.toFixed(2)} €`);
+        lines.push("");
+        lines.push(`Total: ${orderTotal} €`);
+
+        return encodeURIComponent(lines.join("\n"));
       };
 
-const whatsappHref = `https://wa.me/34666331917?text=${shareText()}`;
+      const whatsappHref = `https://wa.me/34666331917?text=${shareText()}`;
+      const canSend = customerName.trim().length > 0;
 
       return (
         <div className="min-h-screen">
@@ -148,6 +173,7 @@ const whatsappHref = `https://wa.me/34666331917?text=${shareText()}`;
           </header>
 
           <main className="mx-auto max-w-6xl px-4 py-8">
+            {/* Preset bowls */}
             <div className="mb-10 grid gap-4 md:grid-cols-3">
               {PRESETS.map((p) => (
                 <div key={p.name} className="rounded-2xl border bg-white p-5 shadow-sm">
@@ -160,14 +186,15 @@ const whatsappHref = `https://wa.me/34666331917?text=${shareText()}`;
                   </div>
                   <button
                     className="mt-4 w-full rounded-xl border border-emerald-500 bg-emerald-500/10 px-4 py-2 text-emerald-700 hover:bg-emerald-500/15"
-                    onClick={() => alert("Ejemplo de preset. Conéctalo a tu receta real.")}
+                    onClick={() => addPreset(p)}
                   >
-                    Elegir este
+                    Añadir al pedido
                   </button>
                 </div>
               ))}
             </div>
 
+            {/* Custom builder */}
             <div className="rounded-3xl border bg-white p-6 shadow-sm">
               <div className="mb-6 flex items-start justify-between gap-4">
                 <div>
@@ -177,7 +204,9 @@ const whatsappHref = `https://wa.me/34666331917?text=${shareText()}`;
                 <div className="flex items-center gap-2">
                   <label className="text-sm text-gray-600">Cantidad</label>
                   <input
-                    type="number" min={1} value={qty}
+                    type="number"
+                    min={1}
+                    value={qty}
                     onChange={(e) => setQty(Math.max(1, parseInt(e.target.value || "1")))}
                     className="w-20 rounded-xl border px-3 py-2"
                   />
@@ -214,55 +243,78 @@ const whatsappHref = `https://wa.me/34666331917?text=${shareText()}`;
                 ))}
               </Section>
 
+              {/* Customer name + Summary */}
               <div className="mt-8 grid gap-6 md:grid-cols-2">
                 <div className="rounded-2xl border p-5">
-                  <h3 className="mb-3 text-lg font-semibold">Resumen</h3>
+                  <h3 className="mb-3 text-lg font-semibold">Datos y resumen</h3>
+
+                  <label className="block text-sm font-medium mb-1" htmlFor="customerName">
+                    Nombre del cliente <span className="text-red-600">*</span>
+                  </label>
+                  <input
+                    id="customerName"
+                    type="text"
+                    placeholder="Escribe tu nombre"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="mb-4 w-full rounded-xl border px-3 py-2"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mb-4">*Pedido para <strong>recogida en local</strong>.</p>
+
+                  {presetOrders.length > 0 && (
+                    <div className="mb-3">
+                      <p className="font-medium">Preset Bowls:</p>
+                      <ul className="list-disc ml-5 text-sm">
+                        {presetOrders.map((p, i) => (
+                          <li key={i}>{p.name} - {p.price} €</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <p className="font-medium">Custom Bowl:</p>
                   <ul className="space-y-1 text-sm">
+                    <li><span className="font-medium">Cantidad:</span> x{qty}</li>
                     <li><span className="font-medium">Base:</span> {selection.base.join(", ") || "—"}</li>
                     <li><span className="font-medium">Proteína:</span> {selection.protein.join(", ") || "—"}</li>
                     <li><span className="font-medium">Toppings:</span> {selection.toppings.join(", ") || "—"}</li>
                     <li><span className="font-medium">Salsa:</span> {selection.sauce.join(", ") || "—"}</li>
                     <li><span className="font-medium">Crujiente:</span> {selection.crunchy.join(", ") || "—"}</li>
                   </ul>
-
-                  <div className="mt-4 text-sm text-gray-600 space-y-1">
-                    <p>Extras por encima de los límites:</p>
-                    <ul className="list-disc ml-5">
-                      {Object.entries(extras).map(([k, v]) => (
-                        <li key={k}>{k}: {v.toFixed(2)} €</li>
-                      ))}
-                    </ul>
-                  </div>
                 </div>
+
                 <div className="rounded-2xl border p-5">
                   <h3 className="mb-3 text-lg font-semibold">Total</h3>
                   <div className="space-y-1 text-sm">
-                    <div className="flex justify-between"><span>Precio base por bowl</span><span>{basePrice.toFixed(2)} €</span></div>
-                    <div className="flex justify-between"><span>Extras por bowl</span><span>{extrasTotal.toFixed(2)} €</span></div>
-                    <div className="flex justify-between border-t pt-2 font-semibold text-lg"><span>Subtotal por bowl</span><span>{bowlSubtotal.toFixed(2)} €</span></div>
-                    <div className="flex justify-between pt-1"><span>Cantidad</span><span>x{qty}</span></div>
+                    <div className="flex justify-between"><span>Subtotal presets</span><span>{presetsTotal.toFixed(2)} €</span></div>
+                    <div className="flex justify-between"><span>Subtotal custom</span><span>{customTotal.toFixed(2)} €</span></div>
                     <div className="flex justify-between border-t pt-2 text-2xl font-extrabold"><span>Total pedido</span><span>{orderTotal} €</span></div>
                   </div>
 
                   <div className="mt-5 flex flex-col gap-2 sm:flex-row">
                     <a
-                      href={whatsappHref}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-center font-semibold text-white hover:bg-emerald-700"
+                      href={canSend ? `https://wa.me/34666331917?text=${shareText()}` : "#"}
+                      onClick={(e) => { if (!canSend) { e.preventDefault(); alert("Por favor, escribe tu nombre para el pedido de recogida."); } }}
+                      aria-disabled={!canSend}
+                      className={
+                        "flex-1 rounded-xl px-4 py-3 text-center font-semibold text-white " +
+                        (canSend ? "bg-emerald-600 hover:bg-emerald-700" : "bg-gray-300 cursor-not-allowed pointer-events-none")
+                      }
+                      title={canSend ? "Enviar por WhatsApp" : "Escribe tu nombre para continuar"}
                     >
                       Enviar por WhatsApp
                     </a>
                     <button onClick={reset} className="rounded-xl border px-4 py-3 font-medium">Reiniciar</button>
                   </div>
-                  <p className="mt-2 text-xs text-gray-500">*WhatsApp abrirá un mensaje con el resumen del pedido listo para compartir.</p>
+                  <p className="mt-2 text-xs text-gray-500">*WhatsApp enviará el pedido directamente al número del restaurante (+34 666 33 19 17).</p>
                 </div>
               </div>
             </div>
 
             <footer className="mt-10 text-center text-sm text-gray-500">
               <p>C/Lepanto 13L · Tel. 666 33 19 17 · Fuerteventura</p>
-              <p className="mt-1">Prototipo interactivo basado en el menú impreso.</p>
+              <p className="mt-1">Pedido para <strong>recogida en local</strong>.</p>
             </footer>
           </main>
         </div>
