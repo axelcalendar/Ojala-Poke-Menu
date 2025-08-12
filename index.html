@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Poke Bar – Online Menu & Builder</title>
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React 18 UMD + ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <!-- Babel for in-browser JSX transform -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-emerald-50/40">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useMemo, useState } = React;
+
+    // Data
+    const PRESETS = [
+      { name: "El Clásico", price: 13 },
+      { name: "Bristol", price: 15 },
+      { name: "Doramas", price: 15 },
+      { name: "Ventahor", price: 14 },
+      { name: "Pulp Fiction", price: 15 },
+      { name: "Ico", price: 14 },
+    ];
+
+    const LIMITS = { base: 1, protein: 1, toppings: 4, sauce: 1, crunchy: 1 };
+    const EXTRA_PRICES = { base: 2, protein: 3, toppings: 1.5, sauce: 1, crunchy: 1.5 };
+
+    const BASES = ["Arroz sushi", "Quinoa", "Ensalada"];
+    const PROTEINS = [
+      "Salmón (crudo)","Salmón tataki","Salmón teriyaki",
+      "Atún (crudo)","Atún tataki","Pulpo","Tofu a la plancha","Pollo teriyaki"
+    ];
+    const TOPPINGS = [
+      "Aguacate","Mango","Alga wakame","Edamame","Cebolla caramelizada","Cebolla encurtida",
+      "Zanahoria","Calabaza","Calabacín parrillado","Tomate cherry","Tomate seco","Pepino",
+      "Col morada","Philadelphia","Queso feta","Jengibre encurtido","Huevas de pescado"
+    ];
+    const SAUCES = [
+      "Spicy mayonesa","Soja","Soja sin gluten","Salsa sriracha 🌶",
+      "Salsa de mango","Wasabi cream","Teriyaki","Salsa curry"
+    ];
+    const CRUNCHY = ["Cebolla crujiente","Pistacho","Almendra","Anacardo","Alga nori crujiente","Mix de semillas"];
+
+    const Section = ({ title, children, hint }) => (
+      <section className="mb-6">
+        <div className="flex items-end justify-between">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          {hint && <p className="text-sm text-gray-500">{hint}</p>}
+        </div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">{children}</div>
+      </section>
+    );
+
+    const Chip = ({ label, selected, disabled, onClick, extraNote }) => (
+      <button
+        className={
+          "text-left rounded-2xl border px-4 py-3 shadow-sm transition " +
+          (selected ? "border-emerald-500 ring-2 ring-emerald-200 bg-white " : "border-gray-200 hover:border-gray-300 bg-white ") +
+          (disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer")
+        }
+        onClick={onClick}
+        disabled={disabled}
+        type="button"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <span className="font-medium">{label}</span>
+          {selected && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white text-xs">✓</span>}
+        </div>
+        {extraNote && <div className="mt-1 text-xs text-gray-500">{extraNote}</div>}
+      </button>
+    );
+
+    function App() {
+      const [qty, setQty] = useState(1);
+      const [selection, setSelection] = useState({ base: [], protein: [], toppings: [], sauce: [], crunchy: [] });
+      const basePrice = 13;
+
+      const counts = useMemo(() => ({
+        base: selection.base.length,
+        protein: selection.protein.length,
+        toppings: selection.toppings.length,
+        sauce: selection.sauce.length,
+        crunchy: selection.crunchy.length,
+      }), [selection]);
+
+      const extras = useMemo(() => {
+        const out = {};
+        Object.keys(LIMITS).forEach((k) => {
+          const over = Math.max(0, (selection[k] || []).length - LIMITS[k]);
+          out[k] = over * EXTRA_PRICES[k];
+        });
+        return out;
+      }, [selection]);
+
+      const extrasTotal = Object.values(extras).reduce((a, b) => a + b, 0);
+      const bowlSubtotal = basePrice + extrasTotal;
+      const orderTotal = (bowlSubtotal * qty).toFixed(2);
+
+      const toggle = (group, item) => {
+        setSelection((prev) => {
+          const exists = prev[group].includes(item);
+          const next = exists ? prev[group].filter((i) => i !== item) : [...prev[group], item];
+          return { ...prev, [group]: next };
+        });
+      };
+
+      const reset = () => {
+        setSelection({ base: [], protein: [], toppings: [], sauce: [], crunchy: [] });
+        setQty(1);
+      };
+
+      const shareText = () => {
+        const lines = [
+          `Pedido Poke Bowl x${qty}`,
+          `Base: ${selection.base.join(", ") || "-"}`,
+          `Proteína: ${selection.protein.join(", ") || "-"}`,
+          `Toppings: ${selection.toppings.join(", ") || "-"}`,
+          `Salsa: ${selection.sauce.join(", ") || "-"}`,
+          `Crujiente: ${selection.crunchy.join(", ") || "-"}`,
+          `Precio por bowl: ${bowlSubtotal.toFixed(2)} €`,
+          `Total: ${orderTotal} €`,
+        ];
+        return encodeURIComponent(lines.join("\\n"));
+      };
+
+      const whatsappHref = `https://wa.me/?text=${shareText()}`;
+
+      return (
+        <div className="min-h-screen">
+          <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b">
+            <div className="mx-auto max-w-6xl px-4 py-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <h1 className="text-2xl font-bold tracking-tight">Poke Bar</h1>
+              <div className="flex items-center gap-3">
+                <div className="rounded-xl border px-3 py-1.5 bg-white text-sm">
+                  Precio base bowl: <span className="font-semibold">{basePrice} €</span>
+                </div>
+                <div className="rounded-xl border px-3 py-1.5 bg-white text-sm">
+                  Extras: base +{EXTRA_PRICES.base}€, proteína +{EXTRA_PRICES.protein}€, toppings +{EXTRA_PRICES.toppings}€, salsa +{EXTRA_PRICES.sauce}€, crujiente +{EXTRA_PRICES.crunchy}€
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <main className="mx-auto max-w-6xl px-4 py-8">
+            <div className="mb-10 grid gap-4 md:grid-cols-3">
+              {PRESETS.map((p) => (
+                <div key={p.name} className="rounded-2xl border bg-white p-5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold">{p.name}</h3>
+                      <p className="text-sm text-gray-500">Bowl listo del chef</p>
+                    </div>
+                    <div className="text-lg font-bold">{p.price} €</div>
+                  </div>
+                  <button
+                    className="mt-4 w-full rounded-xl border border-emerald-500 bg-emerald-500/10 px-4 py-2 text-emerald-700 hover:bg-emerald-500/15"
+                    onClick={() => alert("Ejemplo de preset. Conéctalo a tu receta real.")}
+                  >
+                    Elegir este
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-3xl border bg-white p-6 shadow-sm">
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold">Crea tu poke</h2>
+                  <p className="text-gray-500">Elige hasta: 1 base, 1 proteína, 4 toppings, 1 salsa, 1 crujiente.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-600">Cantidad</label>
+                  <input
+                    type="number" min={1} value={qty}
+                    onChange={(e) => setQty(Math.max(1, parseInt(e.target.value || "1")))}
+                    className="w-20 rounded-xl border px-3 py-2"
+                  />
+                </div>
+              </div>
+
+              <Section title="Base" hint={`Elige ${LIMITS.base}. Extra +${EXTRA_PRICES.base}€`}>
+                {BASES.map((item) => (
+                  <Chip key={item} label={item} selected={selection.base.includes(item)} onClick={() => toggle("base", item)} />
+                ))}
+              </Section>
+
+              <Section title="Proteína" hint={`Elige ${LIMITS.protein}. Extra +${EXTRA_PRICES.protein}€`}>
+                {PROTEINS.map((item) => (
+                  <Chip key={item} label={item} selected={selection.protein.includes(item)} onClick={() => toggle("protein", item)} />
+                ))}
+              </Section>
+
+              <Section title="Toppings" hint={`Hasta ${LIMITS.toppings}. Extra +${EXTRA_PRICES.toppings}€ c/u`}>
+                {TOPPINGS.map((item) => (
+                  <Chip key={item} label={item} selected={selection.toppings.includes(item)} onClick={() => toggle("toppings", item)} />
+                ))}
+              </Section>
+
+              <Section title="Salsa" hint={`Elige ${LIMITS.sauce}. Extra +${EXTRA_PRICES.sauce}€`}>
+                {SAUCES.map((item) => (
+                  <Chip key={item} label={item} selected={selection.sauce.includes(item)} onClick={() => toggle("sauce", item)} />
+                ))}
+              </Section>
+
+              <Section title="Crujiente" hint={`Elige ${LIMITS.crunchy}. Extra +${EXTRA_PRICES.crunchy}€`}>
+                {CRUNCHY.map((item) => (
+                  <Chip key={item} label={item} selected={selection.crunchy.includes(item)} onClick={() => toggle("crunchy", item)} />
+                ))}
+              </Section>
+
+              <div className="mt-8 grid gap-6 md:grid-cols-2">
+                <div className="rounded-2xl border p-5">
+                  <h3 className="mb-3 text-lg font-semibold">Resumen</h3>
+                  <ul className="space-y-1 text-sm">
+                    <li><span className="font-medium">Base:</span> {selection.base.join(", ") || "—"}</li>
+                    <li><span className="font-medium">Proteína:</span> {selection.protein.join(", ") || "—"}</li>
+                    <li><span className="font-medium">Toppings:</span> {selection.toppings.join(", ") || "—"}</li>
+                    <li><span className="font-medium">Salsa:</span> {selection.sauce.join(", ") || "—"}</li>
+                    <li><span className="font-medium">Crujiente:</span> {selection.crunchy.join(", ") || "—"}</li>
+                  </ul>
+
+                  <div className="mt-4 text-sm text-gray-600 space-y-1">
+                    <p>Extras por encima de los límites:</p>
+                    <ul className="list-disc ml-5">
+                      {Object.entries(extras).map(([k, v]) => (
+                        <li key={k}>{k}: {v.toFixed(2)} €</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+                <div className="rounded-2xl border p-5">
+                  <h3 className="mb-3 text-lg font-semibold">Total</h3>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between"><span>Precio base por bowl</span><span>{basePrice.toFixed(2)} €</span></div>
+                    <div className="flex justify-between"><span>Extras por bowl</span><span>{extrasTotal.toFixed(2)} €</span></div>
+                    <div className="flex justify-between border-t pt-2 font-semibold text-lg"><span>Subtotal por bowl</span><span>{bowlSubtotal.toFixed(2)} €</span></div>
+                    <div className="flex justify-between pt-1"><span>Cantidad</span><span>x{qty}</span></div>
+                    <div className="flex justify-between border-t pt-2 text-2xl font-extrabold"><span>Total pedido</span><span>{orderTotal} €</span></div>
+                  </div>
+
+                  <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                    <a
+                      href={whatsappHref}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-center font-semibold text-white hover:bg-emerald-700"
+                    >
+                      Enviar por WhatsApp
+                    </a>
+                    <button onClick={reset} className="rounded-xl border px-4 py-3 font-medium">Reiniciar</button>
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500">*WhatsApp abrirá un mensaje con el resumen del pedido listo para compartir.</p>
+                </div>
+              </div>
+            </div>
+
+            <footer className="mt-10 text-center text-sm text-gray-500">
+              <p>C/Lepanto 13L · Tel. 666 33 19 17 · Fuerteventura</p>
+              <p className="mt-1">Prototipo interactivo basado en el menú impreso.</p>
+            </footer>
+          </main>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
