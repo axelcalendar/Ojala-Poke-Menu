@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Poke Bar – Online Menu</title>
+  <title>Poke Bar – Online Menu & Builder</title>
   <!-- Tailwind via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- React 18 UMD + ReactDOM -->
@@ -18,7 +18,225 @@
   <script type="text/babel">
     const { useMemo, useState } = React;
 
-    // --- Keys ------------------------------------------------------------
+    /* =====================
+     * TRANSLATIONS (ES/EN/IT/FR)
+     * ===================== */
+    const translations = {
+      es: {
+        flagsLabel: "Idioma",
+        ui: {
+          title: "Poke Bar",
+          chefBowls: "Bowls del chef",
+          buildTitle: "Crea tu poke",
+          limitsHint: "Elige hasta: 1 base, 1 proteína, 4 toppings, 1 salsa, 1 crujiente.",
+          basePriceLabel: "Precio base bowl",
+          extras: "Extras",
+          base: "Base",
+          protein: "Proteína",
+          toppings: "Toppings",
+          sauce: "Salsa",
+          crunchy: "Crujiente",
+          detailsSummary: "Datos y resumen",
+          customerNameOptional: "Nombre del cliente (opcional)",
+          pickupNote: "*Pedido para recogida en local.",
+          presetsSection: "Preset Bowls",
+          customSection: "Custom Bowl",
+          subtotalPresets: "Subtotal presets",
+          subtotalCustom: "Subtotal custom",
+          total: "Total pedido",
+          sendWhatsapp: "Enviar por WhatsApp",
+          reset: "Reiniciar",
+          address: "C/Lepanto 13L · Tel. 666 33 19 17 · Fuerteventura",
+          chefReady: "Bowl listo del chef",
+        },
+        presets: {
+          el_clasico: "El Clásico",
+          bristol: "Bristol",
+          doramas: "Doramas",
+          ventahor: "Ventahor",
+          pulp_fiction: "Pulp Fiction",
+          ico: "Ico",
+        },
+        ingredients: {
+          arroz_sushi: "Arroz sushi", quinoa: "Quinoa", ensalada: "Ensalada",
+          salmon_crudo: "Salmón (crudo)", salmon_tataki: "Salmón tataki", salmon_teriyaki: "Salmón teriyaki",
+          atun_crudo: "Atún (crudo)", atun_tataki: "Atún tataki", pulpo: "Pulpo", tofu_plancha: "Tofu a la plancha",
+          pollo_teriyaki: "Pollo teriyaki",
+          aguacate: "Aguacate", mango: "Mango", wakame: "Alga wakame", edamame: "Edamame",
+          cebolla_caramelizada: "Cebolla caramelizada", cebolla_encurtida: "Cebolla encurtida",
+          zanahoria: "Zanahoria", calabaza: "Calabaza", calabacin_grill: "Calabacín parrillado",
+          tomate_cherry: "Tomate cherry", tomate_seco: "Tomate seco", pepino: "Pepino",
+          col_morada: "Col morada", philadelphia: "Philadelphia", feta: "Queso feta",
+          jengibre_encurtido: "Jengibre encurtido", huevas_pez: "Huevas de pescado",
+          spicy_mayo: "Spicy mayonesa", soja: "Soja", soja_sg: "Soja sin gluten",
+          sriracha: "Salsa sriracha 🌶", salsa_mango: "Salsa de mango", wasabi_cream: "Wasabi cream",
+          teriyaki: "Teriyaki", salsa_curry: "Salsa curry",
+          cebolla_crujiente: "Cebolla crujiente", pistacho: "Pistacho", almendra: "Almendra",
+          anacardo: "Anacardo", nori_crujiente: "Alga nori crujiente", mix_semillas: "Mix de semillas",
+        },
+      },
+      en: {
+        flagsLabel: "Language",
+        ui: {
+          title: "Poke Bar",
+          chefBowls: "Chef bowls",
+          buildTitle: "Create your poke",
+          limitsHint: "Choose up to: 1 base, 1 protein, 4 toppings, 1 sauce, 1 crunchy.",
+          basePriceLabel: "Bowl base price",
+          extras: "Extras",
+          base: "Base",
+          protein: "Protein",
+          toppings: "Toppings",
+          sauce: "Sauce",
+          crunchy: "Crunchy",
+          detailsSummary: "Details & summary",
+          customerNameOptional: "Customer name (optional)",
+          pickupNote: "*Order for pick-up at the restaurant.",
+          presetsSection: "Preset Bowls",
+          customSection: "Custom Bowl",
+          subtotalPresets: "Presets subtotal",
+          subtotalCustom: "Custom subtotal",
+          total: "Order total",
+          sendWhatsapp: "Send via WhatsApp",
+          reset: "Reset",
+          address: "C/Lepanto 13L · Tel. 666 33 19 17 · Fuerteventura",
+          chefReady: "Chef-ready bowl",
+        },
+        presets: {
+          el_clasico: "The Classic",
+          bristol: "Bristol",
+          doramas: "Doramas",
+          ventahor: "Ventahor",
+          pulp_fiction: "Pulp Fiction",
+          ico: "Ico",
+        },
+        ingredients: {
+          arroz_sushi: "Sushi rice", quinoa: "Quinoa", ensalada: "Salad",
+          salmon_crudo: "Salmon (raw)", salmon_tataki: "Salmon tataki", salmon_teriyaki: "Salmon teriyaki",
+          atun_crudo: "Tuna (raw)", atun_tataki: "Tuna tataki", pulpo: "Octopus", tofu_plancha: "Grilled tofu",
+          pollo_teriyaki: "Teriyaki chicken",
+          aguacate: "Avocado", mango: "Mango", wakame: "Wakame seaweed", edamame: "Edamame",
+          cebolla_caramelizada: "Caramelized onion", cebolla_encurtida: "Pickled onion",
+          zanahoria: "Carrot", calabaza: "Pumpkin", calabacin_grill: "Grilled zucchini",
+          tomate_cherry: "Cherry tomato", tomate_seco: "Sun-dried tomato", pepino: "Cucumber",
+          col_morada: "Red cabbage", philadelphia: "Cream cheese", feta: "Feta cheese",
+          jengibre_encurtido: "Pickled ginger", huevas_pez: "Fish roe",
+          spicy_mayo: "Spicy mayo", soja: "Soy sauce", soja_sg: "Gluten-free soy sauce",
+          sriracha: "Sriracha sauce 🌶", salsa_mango: "Mango sauce", wasabi_cream: "Wasabi cream",
+          teriyaki: "Teriyaki", salsa_curry: "Curry sauce",
+          cebolla_crujiente: "Crispy onion", pistacho: "Pistachio", almendra: "Almond",
+          anacardo: "Cashew", nori_crujiente: "Crispy nori", mix_semillas: "Seed mix",
+        },
+      },
+      it: {
+        flagsLabel: "Lingua",
+        ui: {
+          title: "Poke Bar",
+          chefBowls: "Bowls dello chef",
+          buildTitle: "Crea il tuo poke",
+          limitsHint: "Scegli fino a: 1 base, 1 proteina, 4 toppings, 1 salsa, 1 croccante.",
+          basePriceLabel: "Prezzo base bowl",
+          extras: "Extra",
+          base: "Base",
+          protein: "Proteina",
+          toppings: "Toppings",
+          sauce: "Salsa",
+          crunchy: "Croccante",
+          detailsSummary: "Dati e riepilogo",
+          customerNameOptional: "Nome del cliente (opzionale)",
+          pickupNote: "*Ordine per ritiro in loco.",
+          presetsSection: "Bowls predefiniti",
+          customSection: "Bowl personalizzato",
+          subtotalPresets: "Subtotale predefiniti",
+          subtotalCustom: "Subtotale personalizzati",
+          total: "Totale ordine",
+          sendWhatsapp: "Invia via WhatsApp",
+          reset: "Reimposta",
+          address: "C/Lepanto 13L · Tel. 666 33 19 17 · Fuerteventura",
+          chefReady: "Bowl pronto dello chef",
+        },
+        presets: {
+          el_clasico: "Il Classico",
+          bristol: "Bristol",
+          doramas: "Doramas",
+          ventahor: "Ventahor",
+          pulp_fiction: "Pulp Fiction",
+          ico: "Ico",
+        },
+        ingredients: {
+          arroz_sushi: "Riso sushi", quinoa: "Quinoa", ensalada: "Insalata",
+          salmon_crudo: "Salmone (crudo)", salmon_tataki: "Salmone tataki", salmon_teriyaki: "Salmone teriyaki",
+          atun_crudo: "Tonno (crudo)", atun_tataki: "Tonno tataki", pulpo: "Polpo", tofu_plancha: "Tofu alla piastra",
+          pollo_teriyaki: "Pollo teriyaki",
+          aguacate: "Avocado", mango: "Mango", wakame: "Alga wakame", edamame: "Edamame",
+          cebolla_caramelizada: "Cipolla caramellata", cebolla_encurtida: "Cipolla marinata",
+          zanahoria: "Carota", calabaza: "Zucca", calabacin_grill: "Zucchina grigliata",
+          tomate_cherry: "Pomodorini", tomate_seco: "Pomodoro secco", pepino: "Cetriolo",
+          col_morada: "Cavolo rosso", philadelphia: "Formaggio cremoso", feta: "Formaggio feta",
+          jengibre_encurtido: "Zenzero marinato", huevas_pez: "Uova di pesce",
+          spicy_mayo: "Maionese piccante", soja: "Salsa di soia", soja_sg: "Salsa di soia senza glutine",
+          sriracha: "Salsa sriracha 🌶", salsa_mango: "Salsa di mango", wasabi_cream: "Crema al wasabi",
+          teriyaki: "Teriyaki", salsa_curry: "Salsa al curry",
+          cebolla_crujiente: "Cipolla croccante", pistacho: "Pistacchio", almendra: "Mandorla",
+          anacardo: "Anacardo", nori_crujiente: "Nori croccante", mix_semillas: "Mix di semi",
+        },
+      },
+      fr: {
+        flagsLabel: "Langue",
+        ui: {
+          title: "Poke Bar",
+          chefBowls: "Bowls du chef",
+          buildTitle: "Crée ton poke",
+          limitsHint: "Choisis jusqu’à : 1 base, 1 protéine, 4 toppings, 1 sauce, 1 croustillant.",
+          basePriceLabel: "Prix de base du bowl",
+          extras: "Extras",
+          base: "Base",
+          protein: "Protéine",
+          toppings: "Toppings",
+          sauce: "Sauce",
+          crunchy: "Croustillant",
+          detailsSummary: "Infos & récapitulatif",
+          customerNameOptional: "Nom du client (optionnel)",
+          pickupNote: "*Commande à récupérer sur place.",
+          presetsSection: "Bowls prédéfinis",
+          customSection: "Bowl personnalisé",
+          subtotalPresets: "Sous-total prédéfinis",
+          subtotalCustom: "Sous-total personnalisés",
+          total: "Total commande",
+          sendWhatsapp: "Envoyer via WhatsApp",
+          reset: "Réinitialiser",
+          address: "C/Lepanto 13L · Tél. 666 33 19 17 · Fuerteventura",
+          chefReady: "Bowl prêt du chef",
+        },
+        presets: {
+          el_clasico: "Le Classique",
+          bristol: "Bristol",
+          doramas: "Doramas",
+          ventahor: "Ventahor",
+          pulp_fiction: "Pulp Fiction",
+          ico: "Ico",
+        },
+        ingredients: {
+          arroz_sushi: "Riz à sushi", quinoa: "Quinoa", ensalada: "Salade",
+          salmon_crudo: "Saumon (cru)", salmon_tataki: "Saumon tataki", salmon_teriyaki: "Saumon teriyaki",
+          atun_crudo: "Thon (cru)", atun_tataki: "Thon tataki", pulpo: "Poulpe", tofu_plancha: "Tofu grillé",
+          pollo_teriyaki: "Poulet teriyaki",
+          aguacate: "Avocat", mango: "Mangue", wakame: "Algues wakame", edamame: "Edamame",
+          cebolla_caramelizada: "Oignon caramélisé", cebolla_encurtida: "Oignon mariné",
+          zanahoria: "Carotte", calabaza: "Potiron", calabacin_grill: "Courgette grillée",
+          tomate_cherry: "Tomate cerise", tomate_seco: "Tomate séchée", pepino: "Concombre",
+          col_morada: "Chou rouge", philadelphia: "Fromage frais", feta: "Fromage feta",
+          jengibre_encurtido: "Gingembre mariné", huevas_pez: "Œufs de poisson",
+          spicy_mayo: "Mayonnaise épicée", soja: "Sauce soja", soja_sg: "Sauce soja sans gluten",
+          sriracha: "Sauce sriracha 🌶", salsa_mango: "Sauce mangue", wasabi_cream: "Crème wasabi",
+          teriyaki: "Teriyaki", salsa_curry: "Sauce curry",
+          cebolla_crujiente: "Oignon croustillant", pistacho: "Pistache", almendra: "Amande",
+          anacardo: "Noix de cajou", nori_crujiente: "Nori croustillant", mix_semillas: "Mélange de graines",
+        },
+      },
+    };
+
+    // Ingredient keys
     const BASES = ["arroz_sushi", "quinoa", "ensalada"];
     const PROTEINS = [
       "salmon_crudo","salmon_tataki","salmon_teriyaki",
@@ -32,244 +250,22 @@
     const SAUCES = [
       "spicy_mayo","soja","soja_sg","sriracha","salsa_mango","wasabi_cream","teriyaki","salsa_curry"
     ];
-    const CRUNCHY = [
-      "cebolla_crujiente","pistacho","almendra","anacardo","nori_crujiente","mix_semillas"
-    ];
+    const CRUNCHY = ["cebolla_crujiente","pistacho","almendra","anacardo","nori_crujiente","mix_semillas"];
 
+    // Presets with keys for translation
     const PRESETS = [
       { key: "el_clasico", price: 13 },
-      { key: "bristol",    price: 15 },
-      { key: "doramas",    price: 15 },
-      { key: "ventahor",   price: 14 },
+      { key: "bristol", price: 15 },
+      { key: "doramas", price: 15 },
+      { key: "ventahor", price: 14 },
       { key: "pulp_fiction", price: 15 },
-      { key: "ico",        price: 14 },
+      { key: "ico", price: 14 },
     ];
 
     const LIMITS = { base: 1, protein: 1, toppings: 4, sauce: 1, crunchy: 1 };
     const EXTRA_PRICES = { base: 2, protein: 3, toppings: 1.5, sauce: 1, crunchy: 1.5 };
     const BASE_PRICE = 13;
 
-    // --- Translations ----------------------------------------------------
-    const translations = {
-      es: {
-        flagsLabel: "Idioma",
-        ui: {
-          title: "Poke Bar",
-          basePrice: "Precio base bowl",
-          extras: "Extras",
-          perItem: "c/u",
-          buildTitle: "Crea tu poke",
-          limitsHint: "Elige hasta: 1 base, 1 proteína, 4 toppings, 1 salsa, 1 crujiente.",
-          quantity: "Cantidad",
-          base: "Base",
-          protein: "Proteína",
-          toppings: "Toppings",
-          sauce: "Salsa",
-          crunchy: "Crujiente",
-          addPreset: "Añadir al pedido",
-          dataSummary: "Datos y resumen",
-          customerName: "Nombre del cliente",
-          nameRequiredNote: "*Pedido para recogida en local.",
-          nameRequiredAlert: "Por favor, escribe tu nombre para el pedido de recogida.",
-          presetsSection: "Preset Bowls",
-          customSection: "Custom Bowls",
-          pricePerCustom: "Precio por custom bowl",
-          subtotalPresets: "Subtotal presets",
-          subtotalCustom: "Subtotal custom",
-          total: "Total pedido",
-          sendWhatsapp: "Enviar por WhatsApp",
-          reset: "Reiniciar",
-          pickupFooter: "Pedido para recogida en local.",
-          address: "C/Lepanto 13L · Tel. 666 33 19 17 · Fuerteventura",
-        },
-        groups: { base:"Base", protein:"Proteína", toppings:"Toppings", sauce:"Salsa", crunchy:"Crujiente" },
-        presets: {
-          el_clasico:"El Clásico", bristol:"Bristol", doramas:"Doramas",
-          ventahor:"Ventahor", pulp_fiction:"Pulp Fiction", ico:"Ico"
-        },
-        ingredients: {
-          arroz_sushi:"Arroz sushi", quinoa:"Quinoa", ensalada:"Ensalada",
-          salmon_crudo:"Salmón (crudo)", salmon_tataki:"Salmón tataki", salmon_teriyaki:"Salmón teriyaki",
-          atun_crudo:"Atún (crudo)", atun_tataki:"Atún tataki", pulpo:"Pulpo", tofu_plancha:"Tofu a la plancha",
-          pollo_teriyaki:"Pollo teriyaki",
-          aguacate:"Aguacate", mango:"Mango", wakame:"Alga wakame", edamame:"Edamame",
-          cebolla_caramelizada:"Cebolla caramelizada", cebolla_encurtida:"Cebolla encurtida",
-          zanahoria:"Zanahoria", calabaza:"Calabaza", calabacin_grill:"Calabacín parrillado",
-          tomate_cherry:"Tomate cherry", tomate_seco:"Tomate seco", pepino:"Pepino",
-          col_morada:"Col morada", philadelphia:"Philadelphia", feta:"Queso feta",
-          jengibre_encurtido:"Jengibre encurtido", huevas_pez:"Huevas de pescado",
-          spicy_mayo:"Spicy mayonesa", soja:"Soja", soja_sg:"Soja sin gluten",
-          sriracha:"Salsa sriracha 🌶", salsa_mango:"Salsa de mango", wasabi_cream:"Wasabi cream",
-          teriyaki:"Teriyaki", salsa_curry:"Salsa curry",
-          cebolla_crujiente:"Cebolla crujiente", pistacho:"Pistacho", almendra:"Almendra",
-          anacardo:"Anacardo", nori_crujiente:"Alga nori crujiente", mix_semillas:"Mix de semillas",
-        }
-      },
-      en: {
-        flagsLabel: "Language",
-        ui: {
-          title: "Poke Bar",
-          basePrice: "Bowl base price",
-          extras: "Extras",
-          perItem: "each",
-          buildTitle: "Create your poke",
-          limitsHint: "Choose up to: 1 base, 1 protein, 4 toppings, 1 sauce, 1 crunchy.",
-          quantity: "Quantity",
-          base: "Base",
-          protein: "Protein",
-          toppings: "Toppings",
-          sauce: "Sauce",
-          crunchy: "Crunchy",
-          addPreset: "Add to order",
-          dataSummary: "Details & summary",
-          customerName: "Customer name",
-          nameRequiredNote: "*Order for pick-up at the restaurant.",
-          nameRequiredAlert: "Please enter your name for pick-up.",
-          presetsSection: "Preset Bowls",
-          customSection: "Custom Bowls",
-          pricePerCustom: "Price per custom bowl",
-          subtotalPresets: "Presets subtotal",
-          subtotalCustom: "Custom subtotal",
-          total: "Order total",
-          sendWhatsapp: "Send via WhatsApp",
-          reset: "Reset",
-          pickupFooter: "Order for pick-up at the restaurant.",
-          address: "C/Lepanto 13L · Tel. 666 33 19 17 · Fuerteventura",
-        },
-        groups: { base:"Base", protein:"Protein", toppings:"Toppings", sauce:"Sauce", crunchy:"Crunchy" },
-        presets: {
-          el_clasico:"The Classic", bristol:"Bristol", doramas:"Doramas",
-          ventahor:"Ventahor", pulp_fiction:"Pulp Fiction", ico:"Ico"
-        },
-        ingredients: {
-          arroz_sushi:"Sushi rice", quinoa:"Quinoa", ensalada:"Salad",
-          salmon_crudo:"Salmon (raw)", salmon_tataki:"Salmon tataki", salmon_teriyaki:"Salmon teriyaki",
-          atun_crudo:"Tuna (raw)", atun_tataki:"Tuna tataki", pulpo:"Octopus", tofu_plancha:"Grilled tofu",
-          pollo_teriyaki:"Teriyaki chicken",
-          aguacate:"Avocado", mango:"Mango", wakame:"Wakame seaweed", edamame:"Edamame",
-          cebolla_caramelizada:"Caramelized onion", cebolla_encurtida:"Pickled onion",
-          zanahoria:"Carrot", calabaza:"Pumpkin", calabacin_grill:"Grilled zucchini",
-          tomate_cherry:"Cherry tomato", tomate_seco:"Sun-dried tomato", pepino:"Cucumber",
-          col_morada:"Red cabbage", philadelphia:"Cream cheese", feta:"Feta cheese",
-          jengibre_encurtido:"Pickled ginger", huevas_pez:"Fish roe",
-          spicy_mayo:"Spicy mayo", soja:"Soy sauce", soja_sg:"Gluten-free soy sauce",
-          sriracha:"Sriracha sauce 🌶", salsa_mango:"Mango sauce", wasabi_cream:"Wasabi cream",
-          teriyaki:"Teriyaki", salsa_curry:"Curry sauce",
-          cebolla_crujiente:"Crispy onion", pistacho:"Pistachio", almendra:"Almond",
-          anacardo:"Cashew", nori_crujiente:"Crispy nori", mix_semillas:"Seed mix",
-        }
-      },
-      it: {
-        flagsLabel: "Lingua",
-        ui: {
-          title: "Poke Bar",
-          basePrice: "Prezzo base bowl",
-          extras: "Extra",
-          perItem: "cad.",
-          buildTitle: "Crea il tuo poke",
-          limitsHint: "Scegli fino a: 1 base, 1 proteina, 4 toppings, 1 salsa, 1 croccante.",
-          quantity: "Quantità",
-          base: "Base",
-          protein: "Proteina",
-          toppings: "Toppings",
-          sauce: "Salsa",
-          crunchy: "Croccante",
-          addPreset: "Aggiungi all'ordine",
-          dataSummary: "Dati e riepilogo",
-          customerName: "Nome del cliente",
-          nameRequiredNote: "*Ordine per ritiro in loco.",
-          nameRequiredAlert: "Per favore, inserisci il tuo nome per il ritiro.",
-          presetsSection: "Bowls predefiniti",
-          customSection: "Bowls personalizzati",
-          pricePerCustom: "Prezzo per bowl personalizzato",
-          subtotalPresets: "Subtotale predefiniti",
-          subtotalCustom: "Subtotale personalizzati",
-          total: "Totale ordine",
-          sendWhatsapp: "Invia via WhatsApp",
-          reset: "Reimposta",
-          pickupFooter: "Ordine per ritiro in loco.",
-          address: "C/Lepanto 13L · Tel. 666 33 19 17 · Fuerteventura",
-        },
-        groups: { base:"Base", protein:"Proteina", toppings:"Toppings", sauce:"Salsa", crunchy:"Croccante" },
-        presets: {
-          el_clasico:"Il Classico", bristol:"Bristol", doramas:"Doramas",
-          ventahor:"Ventahor", pulp_fiction:"Pulp Fiction", ico:"Ico"
-        },
-        ingredients: {
-          arroz_sushi:"Riso sushi", quinoa:"Quinoa", ensalada:"Insalata",
-          salmon_crudo:"Salmone (crudo)", salmon_tataki:"Salmone tataki", salmon_teriyaki:"Salmone teriyaki",
-          atun_crudo:"Tonno (crudo)", atun_tataki:"Tonno tataki", pulpo:"Polpo", tofu_plancha:"Tofu alla piastra",
-          pollo_teriyaki:"Pollo teriyaki",
-          aguacate:"Avocado", mango:"Mango", wakame:"Alga wakame", edamame:"Edamame",
-          cebolla_caramelizada:"Cipolla caramellata", cebolla_encurtida:"Cipolla marinata",
-          zanahoria:"Carota", calabaza:"Zucca", calabacin_grill:"Zucchina alla griglia",
-          tomate_cherry:"Pomodorini", tomate_seco:"Pomodoro secco", pepino:"Cetriolo",
-          col_morada:"Cavolo rosso", philadelphia:"Formaggio cremoso (Philadelphia)", feta:"Formaggio feta",
-          jengibre_encurtido:"Zenzero marinato", huevas_pez:"Uova di pesce",
-          spicy_mayo:"Maionese piccante", soja:"Salsa di soia", soja_sg:"Salsa di soia senza glutine",
-          sriracha:"Salsa sriracha 🌶", salsa_mango:"Salsa di mango", wasabi_cream:"Crema al wasabi",
-          teriyaki:"Teriyaki", salsa_curry:"Salsa al curry",
-          cebolla_crujiente:"Cipolla croccante", pistacho:"Pistacchio", almendra:"Mandorla",
-          anacardo:"Anacardo", nori_crujiente:"Alga nori croccante", mix_semillas:"Mix di semi",
-        }
-      },
-      fr: {
-        flagsLabel: "Langue",
-        ui: {
-          title: "Poke Bar",
-          basePrice: "Prix de base du bowl",
-          extras: "Extras",
-          perItem: "ch.",
-          buildTitle: "Crée ton poke",
-          limitsHint: "Choisis jusqu’à : 1 base, 1 protéine, 4 toppings, 1 sauce, 1 croustillant.",
-          quantity: "Quantité",
-          base: "Base",
-          protein: "Protéine",
-          toppings: "Toppings",
-          sauce: "Sauce",
-          crunchy: "Croustillant",
-          addPreset: "Ajouter à la commande",
-          dataSummary: "Infos & récapitulatif",
-          customerName: "Nom du client",
-          nameRequiredNote: "*Commande à récupérer sur place.",
-          nameRequiredAlert: "Veuillez indiquer votre nom pour le retrait.",
-          presetsSection: "Bowls prédéfinis",
-          customSection: "Bowls personnalisés",
-          pricePerCustom: "Prix par bowl personnalisé",
-          subtotalPresets: "Sous-total prédéfinis",
-          subtotalCustom: "Sous-total personnalisés",
-          total: "Total commande",
-          sendWhatsapp: "Envoyer via WhatsApp",
-          reset: "Réinitialiser",
-          pickupFooter: "Commande à récupérer sur place.",
-          address: "C/Lepanto 13L · Tél. 666 33 19 17 · Fuerteventura",
-        },
-        groups: { base:"Base", protein:"Protéine", toppings:"Toppings", sauce:"Sauce", crunchy:"Croustillant" },
-        presets: {
-          el_clasico:"Le Classique", bristol:"Bristol", doramas:"Doramas",
-          ventahor:"Ventahor", pulp_fiction:"Pulp Fiction", ico:"Ico"
-        },
-        ingredients: {
-          arroz_sushi:"Riz à sushi", quinoa:"Quinoa", ensalada:"Salade",
-          salmon_crudo:"Saumon (cru)", salmon_tataki:"Saumon tataki", salmon_teriyaki:"Saumon teriyaki",
-          atun_crudo:"Thon (cru)", atun_tataki:"Thon tataki", pulpo:"Poulpe", tofu_plancha:"Tofu grillé",
-          pollo_teriyaki:"Poulet teriyaki",
-          aguacate:"Avocat", mango:"Mangue", wakame:"Algues wakame", edamame:"Edamame",
-          cebolla_caramelizada:"Oignon caramélisé", cebolla_encurtida:"Oignon mariné",
-          zanahoria:"Carotte", calabaza:"Potiron", calabacin_grill:"Courgette grillée",
-          tomate_cherry:"Tomate cerise", tomate_seco:"Tomate séchée", pepino:"Concombre",
-          col_morada:"Chou rouge", philadelphia:"Fromage frais (Philadelphia)", feta:"Fromage feta",
-          jengibre_encurtido:"Gingembre mariné", huevas_pez:"Œufs de poisson",
-          spicy_mayo:"Mayonnaise épicée", soja:"Sauce soja", soja_sg:"Sauce soja sans gluten",
-          sriracha:"Sauce sriracha 🌶", salsa_mango:"Sauce mangue", wasabi_cream:"Crème wasabi",
-          teriyaki:"Teriyaki", salsa_curry:"Sauce curry",
-          cebolla_crujiente:"Oignon croustillant", pistacho:"Pistache", almendra:"Amande",
-          anacardo:"Noix de cajou", nori_crujiente:"Nori croustillant", mix_semillas:"Mélange de graines",
-        }
-      }
-    };
-
-    // --- UI helpers ------------------------------------------------------
     const Section = ({ title, children, hint }) => (
       <section className="mb-6">
         <div className="flex items-end justify-between">
@@ -280,107 +276,127 @@
       </section>
     );
 
-    const Chip = ({ label, selected, onClick }) => (
+    const Chip = ({ label, selected, disabled, onClick, extraNote }) => (
       <button
         className={
           "text-left rounded-2xl border px-4 py-3 shadow-sm transition " +
-          (selected ? "border-emerald-500 ring-2 ring-emerald-200 bg-white " : "border-gray-200 hover:border-gray-300 bg-white ")
+          (selected ? "border-emerald-500 ring-2 ring-emerald-200 bg-white " : "border-gray-200 hover:border-gray-300 bg-white ") +
+          (disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer")
         }
         onClick={onClick}
+        disabled={disabled}
         type="button"
       >
         <div className="flex items-center justify-between gap-3">
           <span className="font-medium">{label}</span>
           {selected && <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white text-xs">✓</span>}
         </div>
+        {extraNote && <div className="mt-1 text-xs text-gray-500">{extraNote}</div>}
       </button>
     );
 
-    // --- App -------------------------------------------------------------
+    const PresetChip = ({ label, price, selected, onClick }) => (
+      <button
+        type="button"
+        onClick={onClick}
+        className={
+          "rounded-2xl border p-5 text-left shadow-sm transition w-full " +
+          (selected ? "border-emerald-500 ring-2 ring-emerald-200 bg-emerald-50 " : "border-gray-200 bg-white hover:border-gray-300 ")
+        }
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold">{label}</h3>
+            <p className="text-sm text-gray-500">{/* chef tag set below by t */}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold">{price} €</span>
+            {selected && (
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white text-xs">✓</span>
+            )}
+          </div>
+        </div>
+      </button>
+    );
+
     function App() {
+      // Language state
       const [lang, setLang] = useState("es");
       const t = (section, key) => translations[lang][section][key];
       const ti = (key) => translations[lang].ingredients[key];
       const tp = (key) => translations[lang].presets[key];
 
-      // Start custom qty at 0 so presets don't sum with a default custom bowl
-      const [qty, setQty] = useState(0);
+      // Selections
       const [selection, setSelection] = useState({ base: [], protein: [], toppings: [], sauce: [], crunchy: [] });
-      const [presetOrders, setPresetOrders] = useState([]); // [{key, price}]
-      const [customerName, setCustomerName] = useState("");
+      const [presetOrders, setPresetOrders] = useState([]); // array of preset keys
+      const [customerName, setCustomerName] = useState(""); // optional
+
+      const hasPersonalized = selection.base.length > 0; // personalized bowl active if a base is chosen
+      // Disable ingredients (except Base) when any preset selected and no base picked yet
+      const disableNonBaseIngredients = presetOrders.length > 0 && !hasPersonalized;
 
       const extras = useMemo(() => {
         const out = {};
-        Object.entries({ base: BASES, protein: PROTEINS, toppings: TOPPINGS, sauce: SAUCES, crunchy: CRUNCHY })
-          .forEach(([k]) => {
-            const over = Math.max(0, (selection[k] || []).length - LIMITS[k]);
-            out[k] = over * EXTRA_PRICES[k];
-          });
+        Object.keys(LIMITS).forEach((k) => {
+          const over = Math.max(0, (selection[k] || []).length - LIMITS[k]);
+          out[k] = over * EXTRA_PRICES[k];
+        });
         return out;
       }, [selection]);
 
       const extrasTotal = Object.values(extras).reduce((a, b) => a + b, 0);
-      const bowlSubtotal = (qty > 0 ? (BASE_PRICE + extrasTotal) : 0);
-      const customTotal = bowlSubtotal * qty;
-      const presetsTotal = presetOrders.reduce((sum, p) => sum + p.price, 0);
-      const orderTotal = (customTotal + presetsTotal).toFixed(2);
+      const personalizedSubtotal = hasPersonalized ? (BASE_PRICE + extrasTotal) : 0;
+      const presetsSubtotal = presetOrders
+        .map((k) => PRESETS.find((p) => p.key === k)?.price || 0)
+        .reduce((a, b) => a + b, 0);
+      const orderTotal = (personalizedSubtotal + presetsSubtotal).toFixed(2);
 
       const toggle = (group, itemKey) => {
         setSelection((prev) => {
           const exists = prev[group].includes(itemKey);
-          const next = exists ? prev[group].filter((k) => k !== itemKey) : [...prev[group], itemKey];
+          const next = exists ? prev[group].filter((i) => i !== itemKey) : [...prev[group], itemKey];
           return { ...prev, [group]: next };
         });
       };
 
+      const isPresetSelected = (key) => presetOrders.includes(key);
+      const togglePreset = (key) => {
+        setPresetOrders((prev) => (
+          prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+        ));
+      };
+
       const reset = () => {
         setSelection({ base: [], protein: [], toppings: [], sauce: [], crunchy: [] });
-        setQty(0);
         setPresetOrders([]);
         setCustomerName("");
       };
 
-      // When adding a preset, treat it as the order (not additive with a default custom):
-      // - Clear custom selection and set qty = 0 so total reflects only preset(s)
-      const addPreset = (preset) => {
-        setPresetOrders([...presetOrders, preset]);
-        setSelection({ base: [], protein: [], toppings: [], sauce: [], crunchy: [] });
-        setQty(0);
-      };
-
-      // Nicely formatted multiline block for ingredients
-      const listBlock = (arr) => arr.length ? ("\n- " + arr.map(ti).join("\n- ")) : " -";
+      const listBlock = (arr) => (arr.length ? ("\n- " + arr.map(ti).join("\n- ")) : " -");
 
       const shareText = () => {
         const ui = translations[lang].ui;
         const lines = [];
-        lines.push(`${ui.customerName}: ${customerName.trim() || "-"}`);
-        lines.push(ui.pickupFooter);
+        if (customerName.trim()) lines.push(`${ui.customerNameOptional.replace(" (opcional)", "").replace(" (optional)", "").replace(" (opzionale)", "").replace(" (optionnel)", "")}: ${customerName.trim()}`);
+        lines.push(ui.pickupNote.replace("*", "").trim());
         lines.push("");
 
         if (presetOrders.length > 0) {
           lines.push(`${ui.presetsSection}:`);
-          const counts = presetOrders.reduce((acc, p) => {
-            acc[p.key] = (acc[p.key] || 0) + 1;
-            return acc;
-          }, {});
-          Object.entries(counts).forEach(([k, c]) => {
-            lines.push(`${tp(k)} ×${c}`);
-          });
-          lines.push(`${ui.subtotalPresets}: ${presetsTotal.toFixed(2)} €`);
+          const counts = presetOrders.reduce((acc, k) => { acc[k] = (acc[k] || 0) + 1; return acc; }, {});
+          Object.entries(counts).forEach(([k, c]) => lines.push(`${tp(k)} ×${c}`));
+          lines.push(`${ui.subtotalPresets}: ${presetsSubtotal.toFixed(2)} €`);
           lines.push("");
         }
 
-        if (qty > 0) {
+        if (hasPersonalized) {
           lines.push(`${ui.customSection}:`);
-          lines.push(`${ui.quantity}: ${qty}`);
-          lines.push(`${t("ui","base")}:${listBlock(selection.base)}`);
-          lines.push(`${t("ui","protein")}:${listBlock(selection.protein)}`);
-          lines.push(`${t("ui","toppings")}:${listBlock(selection.toppings)}`);
-          lines.push(`${t("ui","sauce")}:${listBlock(selection.sauce)}`);
-          lines.push(`${t("ui","crunchy")}:${listBlock(selection.crunchy)}`);
-          lines.push(`${ui.pricePerCustom}: ${(BASE_PRICE + extrasTotal).toFixed(2)} €`);
-          lines.push(`${ui.subtotalCustom}: ${customTotal.toFixed(2)} €`);
+          lines.push(`${ui.base}:${listBlock(selection.base)}`);
+          lines.push(`${ui.protein}:${listBlock(selection.protein)}`);
+          lines.push(`${ui.toppings}:${listBlock(selection.toppings)}`);
+          lines.push(`${ui.sauce}:${listBlock(selection.sauce)}`);
+          lines.push(`${ui.crunchy}:${listBlock(selection.crunchy)}`);
+          lines.push(`${ui.subtotalCustom}: ${personalizedSubtotal.toFixed(2)} €`);
           lines.push("");
         }
 
@@ -388,187 +404,157 @@
         return encodeURIComponent(lines.join("\n"));
       };
 
-      // Name required AND at least one item (preset or custom)
-      const hasAnyOrder = presetOrders.length > 0 || qty > 0;
-      const canSend = customerName.trim().length > 0 && hasAnyOrder;
-      const whatsappHref = `https://wa.me/34666331917?text=${shareText()}`;
-
-      // extras label by group
-      const extrasLabel = () => {
-        const g = translations[lang].groups;
-        return [
-          `${g.base} +${EXTRA_PRICES.base}€`,
-          `${g.protein} +${EXTRA_PRICES.protein}€`,
-          `${g.toppings} +${EXTRA_PRICES.toppings}€`,
-          `${g.sauce} +${EXTRA_PRICES.sauce}€`,
-          `${g.crunchy} +${EXTRA_PRICES.crunchy}€`,
-        ].join(", ");
-      };
+      const hasAnyOrder = hasPersonalized || presetOrders.length > 0;
+      const whatsappHref = hasAnyOrder
+        ? `https://wa.me/34666331917?text=${shareText()}`
+        : "#";
 
       return (
         <div className="min-h-screen">
-          {/* Header */}
+          {/* Header with flags */}
           <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b">
             <div className="mx-auto max-w-6xl px-4 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold tracking-tight">{t("ui","title")}</h1>
+                <h1 className="text-2xl font-bold tracking-tight">{t('ui','title')}</h1>
                 <span className="text-sm text-gray-400">·</span>
                 <div className="text-sm text-gray-600">{translations[lang].flagsLabel}:</div>
                 <div className="flex gap-2">
-                  <button className={"px-2 py-1 rounded text-2xl " + (lang==="es"?"bg-emerald-100":"hover:bg-gray-100")} onClick={()=>setLang("es")} title="Español">🇪🇸</button>
-                  <button className={"px-2 py-1 rounded text-2xl " + (lang==="en"?"bg-emerald-100":"hover:bg-gray-100")} onClick={()=>setLang("en")} title="English">🇬🇧</button>
-                  <button className={"px-2 py-1 rounded text-2xl " + (lang==="it"?"bg-emerald-100":"hover:bg-gray-100")} onClick={()=>setLang("it")} title="Italiano">🇮🇹</button>
-                  <button className={"px-2 py-1 rounded text-2xl " + (lang==="fr"?"bg-emerald-100":"hover:bg-gray-100")} onClick={()=>setLang("fr")} title="Français">🇫🇷</button>
+                  <button className={"px-2 py-1 rounded text-2xl " + (lang==='es'?"bg-emerald-100":"hover:bg-gray-100")} onClick={()=>setLang('es')} title="Español">🇪🇸</button>
+                  <button className={"px-2 py-1 rounded text-2xl " + (lang==='en'?"bg-emerald-100":"hover:bg-gray-100")} onClick={()=>setLang('en')} title="English">🇬🇧</button>
+                  <button className={"px-2 py-1 rounded text-2xl " + (lang==='it'?"bg-emerald-100":"hover:bg-gray-100")} onClick={()=>setLang('it')} title="Italiano">🇮🇹</button>
+                  <button className={"px-2 py-1 rounded text-2xl " + (lang==='fr'?"bg-emerald-100":"hover:bg-gray-100")} onClick={()=>setLang('fr')} title="Français">🇫🇷</button>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="rounded-xl border px-3 py-1.5 bg-white text-sm">
-                  {t("ui","basePrice")}: <span className="font-semibold">{BASE_PRICE} €</span>
+                  {t('ui','basePriceLabel')}: <span className="font-semibold">{BASE_PRICE} €</span>
                 </div>
                 <div className="rounded-xl border px-3 py-1.5 bg-white text-sm">
-                  {t("ui","extras")}: {extrasLabel()}
+                  {t('ui','extras')}: {`${t('ui','base')} +${EXTRA_PRICES.base}€, ${t('ui','protein')} +${EXTRA_PRICES.protein}€, ${t('ui','toppings')} +${EXTRA_PRICES.toppings}€, ${t('ui','sauce')} +${EXTRA_PRICES.sauce}€, ${t('ui','crunchy')} +${EXTRA_PRICES.crunchy}€`}
                 </div>
               </div>
             </div>
           </header>
 
           <main className="mx-auto max-w-6xl px-4 py-8">
-            {/* Preset bowls */}
-            <div className="mb-10 grid gap-4 md:grid-cols-3">
-              {PRESETS.map((p) => (
-                <div key={p.key} className="rounded-2xl border bg-white p-5 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">{tp(p.key)}</h3>
-                      <p className="text-sm text-gray-500">Bowl</p>
-                    </div>
-                    <div className="text-lg font-bold">{p.price} €</div>
-                  </div>
-                  <button
-                    className="mt-4 w-full rounded-xl border border-emerald-500 bg-emerald-500/10 px-4 py-2 text-emerald-700 hover:bg-emerald-500/15"
-                    onClick={() => addPreset(p)}
-                  >
-                    {t("ui","addPreset")}
-                  </button>
-                </div>
-              ))}
-            </div>
+            {/* Preset bowls as clickable chips */}
+            <section className="mb-8">
+              <div className="mb-2 text-lg font-semibold">{t('ui','chefBowls')}</div>
+              <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+                {PRESETS.map((p) => (
+                  <PresetChip
+                    key={p.key}
+                    label={tp(p.key)}
+                    price={p.price}
+                    selected={isPresetSelected(p.key)}
+                    onClick={() => togglePreset(p.key)}
+                  />
+                ))}
+              </div>
+            </section>
 
             {/* Custom builder */}
             <div className="rounded-3xl border bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-bold">{t("ui","buildTitle")}</h2>
-                  <p className="text-gray-500">{t("ui","limitsHint")}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <label className="text-sm text-gray-600">{t("ui","quantity")}</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={qty}
-                    onChange={(e) => setQty(Math.max(0, parseInt(e.target.value || "0")))}
-                    className="w-24 rounded-xl border px-3 py-2"
-                  />
-                </div>
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold">{t('ui','buildTitle')}</h2>
+                <p className="text-gray-500">{t('ui','limitsHint')}</p>
               </div>
 
-              <Section title={t("ui","base")}>
+              <Section title={t('ui','base')} hint={`${t('ui','base')} 1 · +${EXTRA_PRICES.base}€ extra`}>
                 {BASES.map((k) => (
-                  <Chip key={k} label={ti(k)} selected={selection.base.includes(k)} onClick={() => toggle("base", k)} />
+                  <Chip key={k} label={ti(k)} selected={selection.base.includes(k)} disabled={false} onClick={() => toggle('base', k)} />
                 ))}
               </Section>
 
-              <Section title={t("ui","protein")}>
+              <Section title={t('ui','protein')} hint={`${t('ui','protein')} 1 · +${EXTRA_PRICES.protein}€`}>
                 {PROTEINS.map((k) => (
-                  <Chip key={k} label={ti(k)} selected={selection.protein.includes(k)} onClick={() => toggle("protein", k)} />
+                  <Chip key={k} label={ti(k)} selected={selection.protein.includes(k)} disabled={disableNonBaseIngredients} onClick={() => toggle('protein', k)} />
                 ))}
               </Section>
 
-              <Section title={t("ui","toppings")}>
+              <Section title={t('ui','toppings')} hint={`${t('ui','toppings')} 4 · +${EXTRA_PRICES.toppings}€ c/u`}>
                 {TOPPINGS.map((k) => (
-                  <Chip key={k} label={ti(k)} selected={selection.toppings.includes(k)} onClick={() => toggle("toppings", k)} />
+                  <Chip key={k} label={ti(k)} selected={selection.toppings.includes(k)} disabled={disableNonBaseIngredients} onClick={() => toggle('toppings', k)} />
                 ))}
               </Section>
 
-              <Section title={t("ui","sauce")}>
+              <Section title={t('ui','sauce')} hint={`${t('ui','sauce')} 1 · +${EXTRA_PRICES.sauce}€`}>
                 {SAUCES.map((k) => (
-                  <Chip key={k} label={ti(k)} selected={selection.sauce.includes(k)} onClick={() => toggle("sauce", k)} />
+                  <Chip key={k} label={ti(k)} selected={selection.sauce.includes(k)} disabled={disableNonBaseIngredients} onClick={() => toggle('sauce', k)} />
                 ))}
               </Section>
 
-              <Section title={t("ui","crunchy")}>
+              <Section title={t('ui','crunchy')} hint={`${t('ui','crunchy')} 1 · +${EXTRA_PRICES.crunchy}€`}>
                 {CRUNCHY.map((k) => (
-                  <Chip key={k} label={ti(k)} selected={selection.crunchy.includes(k)} onClick={() => toggle("crunchy", k)} />
+                  <Chip key={k} label={ti(k)} selected={selection.crunchy.includes(k)} disabled={disableNonBaseIngredients} onClick={() => toggle('crunchy', k)} />
                 ))}
               </Section>
 
-              {/* Name + Summary + Total */}
+              {/* Customer name (optional) + Summary */}
               <div className="mt-8 grid gap-6 md:grid-cols-2">
                 <div className="rounded-2xl border p-5">
-                  <h3 className="mb-3 text-lg font-semibold">{t("ui","dataSummary")}</h3>
+                  <h3 className="mb-3 text-lg font-semibold">{t('ui','detailsSummary')}</h3>
 
                   <label className="block text-sm font-medium mb-1" htmlFor="customerName">
-                    {t("ui","customerName")} <span className="text-red-600">*</span>
+                    {t('ui','customerNameOptional')}
                   </label>
                   <input
                     id="customerName"
                     type="text"
+                    placeholder=""
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     className="mb-4 w-full rounded-xl border px-3 py-2"
-                    required
                   />
-                  <p className="text-xs text-gray-500 mb-4">{t("ui","nameRequiredNote")}</p>
+                  <p className="text-xs text-gray-500 mb-4">{t('ui','pickupNote')}</p>
 
                   {presetOrders.length > 0 && (
                     <div className="mb-3">
-                      <p className="font-medium">{t("ui","presetsSection")}:</p>
+                      <p className="font-medium">{t('ui','presetsSection')}:</p>
                       <ul className="list-disc ml-5 text-sm">
-                        {presetOrders.map((p, i) => (
-                          <li key={i}>{tp(p.key)} - {p.price} €</li>
+                        {presetOrders.map((k, i) => (
+                          <li key={i}>{tp(k)}</li>
                         ))}
                       </ul>
                     </div>
                   )}
 
-                  {qty > 0 && (
+                  {hasPersonalized && (
                     <>
-                      <p className="font-medium">{t("ui","customSection")}:</p>
+                      <p className="font-medium">{t('ui','customSection')}:</p>
                       <ul className="space-y-1 text-sm">
-                        <li><span className="font-medium">{t("ui","quantity")}:</span> x{qty}</li>
-                        <li><span className="font-medium">{t("ui","base")}:</span> {selection.base.map(ti).join(", ") || "—"}</li>
-                        <li><span className="font-medium">{t("ui","protein")}:</span> {selection.protein.map(ti).join(", ") || "—"}</li>
-                        <li><span className="font-medium">{t("ui","toppings")}:</span> {selection.toppings.map(ti).join(", ") || "—"}</li>
-                        <li><span className="font-medium">{t("ui","sauce")}:</span> {selection.sauce.map(ti).join(", ") || "—"}</li>
-                        <li><span className="font-medium">{t("ui","crunchy")}:</span> {selection.crunchy.map(ti).join(", ") || "—"}</li>
+                        <li><span className="font-medium">{t('ui','base')}:</span> {selection.base.map(ti).join(', ') || '—'}</li>
+                        <li><span className="font-medium">{t('ui','protein')}:</span> {selection.protein.map(ti).join(', ') || '—'}</li>
+                        <li><span className="font-medium">{t('ui','toppings')}:</span> {selection.toppings.map(ti).join(', ') || '—'}</li>
+                        <li><span className="font-medium">{t('ui','sauce')}:</span> {selection.sauce.map(ti).join(', ') || '—'}</li>
+                        <li><span className="font-medium">{t('ui','crunchy')}:</span> {selection.crunchy.map(ti).join(', ') || '—'}</li>
                       </ul>
                     </>
                   )}
                 </div>
 
                 <div className="rounded-2xl border p-5">
-                  <h3 className="mb-3 text-lg font-semibold">{t("ui","total")}</h3>
+                  <h3 className="mb-3 text-lg font-semibold">{t('ui','total')}</h3>
                   <div className="space-y-1 text-sm">
-                    <div className="flex justify-between"><span>{t("ui","subtotalPresets")}</span><span>{presetsTotal.toFixed(2)} €</span></div>
-                    <div className="flex justify-between"><span>{t("ui","subtotalCustom")}</span><span>{customTotal.toFixed(2)} €</span></div>
-                    <div className="flex justify-between border-t pt-2 text-2xl font-extrabold"><span>{t("ui","total")}</span><span>{orderTotal} €</span></div>
+                    <div className="flex justify-between"><span>{t('ui','subtotalPresets')}</span><span>{presetsSubtotal.toFixed(2)} €</span></div>
+                    <div className="flex justify-between"><span>{t('ui','subtotalCustom')}</span><span>{personalizedSubtotal.toFixed(2)} €</span></div>
+                    <div className="flex justify-between border-t pt-2 text-2xl font-extrabold"><span>{t('ui','total')}</span><span>{orderTotal} €</span></div>
                   </div>
-
                   <div className="mt-5 flex flex-col gap-2 sm:flex-row">
                     <a
-                      href={canSend ? `https://wa.me/34666331917?text=${shareText()}` : "#"}
-                      onClick={(e) => { if (!canSend) { e.preventDefault(); alert(t("ui","nameRequiredAlert")); } }}
-                      aria-disabled={!canSend}
+                      href={whatsappHref}
+                      onClick={(e) => { if (!hasAnyOrder) { e.preventDefault(); alert(lang==='es' ? 'Por favor, elige un preset o crea tu bowl.' : lang==='en' ? 'Please select a preset or create your bowl.' : lang==='it' ? 'Seleziona un bowl predefinito o crea il tuo.' : 'Veuillez sélectionner un bowl ou créer le vôtre.'); } }}
+                      target="_blank"
+                      rel="noreferrer"
                       className={
                         "flex-1 rounded-xl px-4 py-3 text-center font-semibold text-white " +
-                        (canSend ? "bg-emerald-600 hover:bg-emerald-700" : "bg-gray-300 cursor-not-allowed pointer-events-none")
+                        (hasAnyOrder ? "bg-emerald-600 hover:bg-emerald-700" : "bg-gray-300 cursor-not-allowed")
                       }
-                      title={canSend ? t("ui","sendWhatsapp") : t("ui","nameRequiredAlert")}
+                      title={t('ui','sendWhatsapp')}
                     >
-                      {t("ui","sendWhatsapp")}
+                      {t('ui','sendWhatsapp')}
                     </a>
-                    <button onClick={reset} className="rounded-xl border px-4 py-3 font-medium">{t("ui","reset")}</button>
+                    <button onClick={reset} className="rounded-xl border px-4 py-3 font-medium">{t('ui','reset')}</button>
                   </div>
                   <p className="mt-2 text-xs text-gray-500">*WhatsApp: +34 666 33 19 17</p>
                 </div>
@@ -576,15 +562,14 @@
             </div>
 
             <footer className="mt-10 text-center text-sm text-gray-500">
-              <p>{t("ui","address")}</p>
-              <p className="mt-1">{t("ui","pickupFooter")}</p>
+              <p>{t('ui','address')}</p>
             </footer>
           </main>
         </div>
       );
     }
 
-    const root = ReactDOM.createRoot(document.getElementById("root"));
+    const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
 </body>
